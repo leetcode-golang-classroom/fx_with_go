@@ -17,16 +17,29 @@ func main() {
 			fx.Annotate(
 				NewPublisher,
 				fx.As(new(IPublisher)),
+				fx.ParamTags(`group:"titles"`),
 			),
 		),
-		fx.Provide(func() *Title {
-			t := Title("hello")
-			return &t
-		}),
+		fx.Provide(
+			titleCompoent("hello"),
+		),
+		fx.Provide(
+			titleCompoent("goodbye"),
+		),
 		fx.Invoke(func(service *MainService) {
 			service.Run()
 		}),
 	).Run()
+}
+
+func titleCompoent(title string) any {
+	return fx.Annotate(
+		func() *Title {
+			t := Title(title)
+			return &t
+		},
+		fx.ResultTags(`group:"titles"`),
+	)
 }
 
 type MainService struct {
@@ -48,16 +61,18 @@ type IPublisher interface {
 	Publish()
 }
 type Publisher struct {
-	title *Title
+	titles []*Title
 }
 
-func NewPublisher(title *Title) *Publisher {
+func NewPublisher(titles ...*Title) *Publisher {
 	return &Publisher{
-		title: title,
+		titles: titles,
 	}
 }
 func (publisher *Publisher) Publish() {
-	log.Print("publisher:", *publisher.title)
+	for _, title := range publisher.titles {
+		log.Print("publisher:", *title)
+	}
 }
 
 // Dependency of publisher
