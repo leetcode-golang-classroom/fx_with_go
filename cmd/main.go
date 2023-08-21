@@ -13,9 +13,14 @@ func main() {
 	// m.Run()
 	fx.New(
 		fx.Provide(NewMainService),
-		fx.Provide(NewPublisher),
+		fx.Provide(
+			fx.Annotate(
+				NewPublisher,
+				fx.As(new(IPublisher)),
+			),
+		),
 		fx.Provide(func() *Title {
-			t := Title("goodbye")
+			t := Title("hello")
 			return &t
 		}),
 		fx.Invoke(func(service *MainService) {
@@ -25,10 +30,10 @@ func main() {
 }
 
 type MainService struct {
-	publisher *Publisher
+	publisher IPublisher
 }
 
-func NewMainService(publisher *Publisher) *MainService {
+func NewMainService(publisher IPublisher) *MainService {
 	return &MainService{
 		publisher: publisher,
 	}
@@ -39,6 +44,9 @@ func (service *MainService) Run() {
 }
 
 // Dependency
+type IPublisher interface {
+	Publish()
+}
 type Publisher struct {
 	title *Title
 }
